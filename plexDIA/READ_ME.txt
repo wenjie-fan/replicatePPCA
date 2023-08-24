@@ -1,0 +1,1 @@
+These proteins x single-cells matrices are exactly the same, but the “Proteins_SC_IDs.txt” now has the cell type header replaced with an ID that can be traced back to the “Meta_SingleCell_updated_1.tsv” file.
