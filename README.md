@@ -2,6 +2,11 @@
 
 The [**replicatePPCA**](https://github.com/wenjie-fan/replicatePPCA/) (Replicated-data Probabilistic Principal Component Analysis) package is a Python package for analyzing mass spectrometry (MS) data in proteomics. Serving as an extension to probabilistic principal component analysis (PPCA) [[1]](#1), the package provides model fitting, visualizations, replicate analysis, and clustering uncertainty quantification and beyond. These results can be further passed on to unsupervised clustering algorithms.
 
+<p float="middle">
+    <img src="https://raw.githubusercontent.com/wenjie-fan/replicatePPCA/main/assets/emPPCA1.jpg" width="45%" />
+    <img src="https://raw.githubusercontent.com/wenjie-fan/replicatePPCA/main/assets/emPPCA2.jpg" width="45%" />
+</p>
+
 ## Basic ideas and concepts
 
 As extracted from the report abstract:
