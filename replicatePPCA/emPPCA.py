@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import copy
 from numpy import log, cov, pi, trace
-# from numpy import shape, nanmean, mean, zeros, log, cov, pi
 from numpy.linalg import inv, det, eig, norm
 from scipy.linalg import orth
 from matplotlib.colors import Normalize
@@ -38,10 +37,12 @@ class emPPCA:
             Data list for the R replicates, each replicate is a matrix with each observation in a row
         q : int
             Number of retained dimensions
-        textlabel : List[List]
-                    The text labels or anything original to represent the classes of observations
         label : List[List]
-                Numerical labels of observations in each replicate, from 0 to the number of classes minue one
+                The text labels or anything original to represent the classes of observations
+        markers : List
+                  User may specify the markers for different replicates
+        colors : List
+                 User may specify the colors for different classes
         """
         # Essential parameters
         self.Y = copy.deepcopy(Y)
@@ -92,7 +93,7 @@ class emPPCA:
             self.E_Y[r][missing] = 0
             
         # Figure output folder
-        self.folder = 'output_figures'
+        self.folder = 'em_output_figures'
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
         
@@ -101,7 +102,7 @@ class emPPCA:
     # EM algorithm
     # ------------------------------------------
     
-    def fit(self, tol=1e-6, max_iter=1000, seed=None):
+    def fit(self, tol=1e-6, max_iter=1000, seed=None, verbose=True):
         """
         Run EM algorithm for PPCA, on replicated data of possibly different sizes or with missing values 
 
@@ -155,7 +156,8 @@ class emPPCA:
             else:
                 change = tol
             if change < tol:
-                print(f'EM algorithm converged with {epoch} iterations; with relative change {change}.')
+                if verbose == True:
+                    print(f'EM algorithm converged with {epoch} iterations; with relative change {change}.')
                 break
             else:
                 self.sigma = sigma_new
@@ -293,22 +295,7 @@ class emPPCA:
                            'PC2': np.concatenate(self.X)[:,pc2],
                            'rep': [i for i,count in enumerate(self.n) for _ in range(count)]})
         if self.textlabel is not None:
-            df['class'] = np.concatenate(self.textlabel)
-  
-        # Case 1, distinguish replicates
-        # if compare=='replicate':
-        #     fig, ax = plt.subplots(figsize=(7,7))
-        #     marker = 0
-        #     for r in reps:
-        #         ax.scatter(self.X[r][:,pc1], self.X[r][:,pc2], marker=self.marker[marker],
-        #                     alpha=0.7, s=30, label=f'Replicate {r+1}', c='#1f77b4')
-        #         if separate_legend==True:
-        #             box = ax.get_position()
-        #             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        #             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-        #         else:
-        #             ax.legend()
-        #         marker += 1     
+            df['class'] = np.concatenate(self.textlabel)   
         
         # Case 1, distinguish replicates
         if compare=='replicate':
@@ -318,9 +305,10 @@ class emPPCA:
                 ax.scatter(self.X[r][:,pc1], self.X[r][:,pc2], marker=self.marker[marker],
                             alpha=0.7, s=30, label=f'Replicate {r+1}')
                 if separate_legend==True:
-                    box = ax.get_position()
-                    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-                    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                    # box = ax.get_position()
+                    # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+                    # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
                 else:
                     ax.legend()
                 marker += 1   
@@ -332,17 +320,16 @@ class emPPCA:
                 condition = (df['class'] == text)
                 ax.scatter(df.loc[condition, 'PC1'], df.loc[condition, 'PC2'], alpha=0.7, s=30, label=text)
             if separate_legend==True:
-                box = ax.get_position()
-                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-                ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                # box = ax.get_position()
+                # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+                # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+                ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
             else:
-                ax.legend()  
-
-        # ------------------------------------------ revising below                    
+                ax.legend()                    
                 
         # Case 3, distinguish simultaneously
         elif (compare==None) & (self.text_classes is not None):
-            fig, ax = plt.subplots(figsize=(10,7))
+            fig, ax = plt.subplots(figsize=(7,7))
             color = 0
             for text in self.text_classes:
                 marker = 0
@@ -355,9 +342,10 @@ class emPPCA:
             # Figure settings
             legend_labels = [mpatches.Patch(color=self.color[i], label=self.text_classes[i]) for i in range(color)]
             legend_labels += [plt.Line2D([0], [0], color='gray', marker=self.marker[r], linestyle='', label=f'Replicate {reps[r]+1}') for r in range(marker)]
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-            ax.legend(handles=legend_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+            # box = ax.get_position()
+            # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            # ax.legend(handles=legend_labels, loc='center left', bbox_to_anchor=(1, 0.5))
+            ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
         
         # Case 4, directly visualize
         else:
@@ -377,7 +365,7 @@ class emPPCA:
     # ------------------------------------------
     # Feature abundance plot
     # ------------------------------------------
-    def abundance_plot(self, rep=None, pcs=[1,2]):
+    def abundance_plot(self, rep=None, pcs=[1,2], lims=None, name=None):
         if rep is None:
             rep = [r for r in range(self.R)]
         else:
@@ -391,9 +379,13 @@ class emPPCA:
         # Scattering with Z-score visualization
         norm = Normalize(vmin=min(z_scores), vmax=max(z_scores))
         colors = plt.cm.coolwarm(norm(z_scores))
-        plt.figure(figsize=(8,5))
-        plt.scatter(X_flatten[:,pc1], X_flatten[:,pc2], c=colors, alpha=0.75, s=20)
+        fig, ax = plt.subplots(figsize=(8,6))
+        ax.scatter(X_flatten[:,pc1], X_flatten[:,pc2], c=colors, alpha=0.75, s=20)
         plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap='coolwarm'), label='Abundance z score')
+        if lims is not None:
+            ax.axis(lims)
+        if name is not None:
+            plt.savefig(f'{self.folder}/{name}.pdf')
         plt.show()
         
     
@@ -424,9 +416,10 @@ class emPPCA:
         plt.axhline(y=0.95, color='r',  linewidth=0.75)
         
         # Legend
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
         
         if name is not None:
             plt.savefig(f'{self.folder}/{name}.pdf')
